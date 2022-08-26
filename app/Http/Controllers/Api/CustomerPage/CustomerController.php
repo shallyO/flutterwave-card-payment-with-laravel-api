@@ -14,10 +14,11 @@ class CustomerController extends Controller
 
     public function __construct(PrepareResponseController $prepareResponse)
     {
-
+        #this is for preparing the response
         $this->prepareResponse = $prepareResponse;
     }
-    #
+
+
     public function createCustomer(Request $request){
 
         #validate data
@@ -27,8 +28,8 @@ class CustomerController extends Controller
             'phonenumber' => 'required|unique:customers|min:11',
         ]);
 
-
-        if ($validator->stopOnFirstFailure()->fails()) {
+            #validate user data
+            if ($validator->stopOnFirstFailure()->fails()) {
             return $this->prepareResponse->simple_response(
                 false,
                 $validator->errors()->first(),
@@ -40,6 +41,7 @@ class CustomerController extends Controller
 
         try{
 
+            #insert data into customer table
             Customer::create($request->all());
 
         }catch(\Exception $ex){
@@ -72,6 +74,7 @@ class CustomerController extends Controller
     public function fetchAllCustomers(){
 
 
+            #return all customers using pagination. 10 at a time
            $data =  Customer::paginate(10);
 
         return $this->prepareResponse->simple_response(

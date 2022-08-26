@@ -20,6 +20,10 @@ class CardPaymentController extends Controller
         $this->prepareResponse = $prepareResponse;
     }
 
+    /*
+     * The charge function accepts the card parameters and values.
+     * It sends these information to flutterwave then returns status of the card to customers
+     */
     public function chargeCard(Request $request){
 
         #validate data
@@ -57,7 +61,7 @@ class CardPaymentController extends Controller
             $data['redirect_url'] = "https://www.flutterwave.ng";
 
 
-            #initialize the card
+            #initialize the card and send payload to flutterwave
             $payment = new CardPayment();
             $res = $payment->cardCharge($data);//Send request to fetch authorization method
             $data['authorization']['mode'] = $res['meta']['authorization']['mode']; //confirm authentication mode
@@ -112,6 +116,10 @@ class CardPaymentController extends Controller
         }
     }
 
+    /*
+     * This function accepts card parametes with the pin,
+     * it validates the pin attached by sending it to flutterwave with the details of payment
+     */
     public function validateCardPin(Request $request){
 
         $validator = Validator::make($request->all(), [
@@ -126,6 +134,7 @@ class CardPaymentController extends Controller
             'system_ref' => 'required|exists:card_payment_history'
         ]);
 
+        #ensure data is correct
         if ($validator->stopOnFirstFailure()->fails()) {
             return $this->prepareResponse->simple_response(
                 false,
@@ -161,16 +170,16 @@ class CardPaymentController extends Controller
         $data['redirect_url'] = "https://www.flutterwave.ng";
         $payment = new CardPayment();
 
-        $result = $payment->cardCharge($data);//charge with new  to validate pin
+        $result = $payment->cardCharge($data);//send payload with pin entered by the user
 
-        //print_r($result);
+
 
         if($result['data']['auth_mode'] == 'otp'){
             $id = $result['data']['id'];
             $flw_ref = $result['data']['flw_ref'];
             //$otp = '12345';
 
-            #save transaction details to db
+            #save transaction details to db for reference later
             $saveRef = CardPaymentHistory::where('system_ref', $request->system_ref)->update((
                 array(
                     'flw_ref' => $flw_ref,
@@ -210,6 +219,10 @@ class CardPaymentController extends Controller
         }
     }
 
+    /*
+     * This function requires otp from the user and then sends the otp to flutterwave for validation
+     * After the opt is validated, it confirms that the payment was successful
+     */
     public function verifyOtpAndPayment(Request $request){
 
         $validator = Validator::make($request->all(), [
@@ -233,16 +246,17 @@ class CardPaymentController extends Controller
         }
 
 
-
+        #fetch details required to complete payment
         $refDetails = CardPaymentHistory::where(array('customer_id' => $customerId, 'system_ref' => $ref,'status' => 'awaiting_otp' ))->first();
         $flw_ref = $refDetails->flw_ref;
         $flw_id = $refDetails->flw_id;
 
         if($refDetails !== null){
 
+            #initialize flutterwave and send otp for validation
             $payment = new CardPayment();
             $validate = json_decode($payment->validateTransaction($otp,$flw_ref));// you can print_r($validate) to see the response
-            $verify = $payment->verifyTransaction($flw_id);
+            $verify = $payment->verifyTransaction($flw_id); #verify to ensure transaction was successful
 
             //print_r($validate->status);
 

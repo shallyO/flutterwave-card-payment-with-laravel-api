@@ -17,6 +17,9 @@ class TransactionsController extends Controller
         $this->prepareResponse = $prepareResponse;
     }
 
+    /*
+     * This funtion returns the transactions made by a particular customer
+     */
     public function fetchCustomerTransactions($customerId){
 
         try{
@@ -37,6 +40,7 @@ class TransactionsController extends Controller
                 400);
         }
 
+        #fetch transaction data of the customer by the customer Id
         $transactionData = Transaction::where('customer_id', $customerId)->paginate(10);
 
         return $this->prepareResponse->simple_response(
@@ -48,16 +52,21 @@ class TransactionsController extends Controller
 
     }
 
+    /*
+     * This function returns the customer details along side the transaction details of the customer
+     */
     public function fetchTransactionByCustomerId($customerId){
 
         try{
 
+            #ensure that the customer exists
             $customerData = Customer::where('id', $customerId)->first();
 
         }catch(Exception $ex){
 
         }
 
+        #fetch transaction data of the customer by the customer Id
         $transactionData = Transaction::where('customer_id', $customerId)->paginate(10);
 
         return $this->prepareResponse->simple_response(

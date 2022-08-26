@@ -19,6 +19,7 @@ Route::group([
 
 ], function ($router) {
 
+    #create customer endpoint
     Route::post('createCustomer', 'Api\CustomerPage\CustomerController@createCustomer');
     Route::get('fetchAllCustomers', 'Api\CustomerPage\CustomerController@fetchAllCustomers');
 

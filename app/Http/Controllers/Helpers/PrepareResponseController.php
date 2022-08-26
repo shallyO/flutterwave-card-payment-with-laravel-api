@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 
 class PrepareResponseController extends Controller
 {
+    #this ensures that the response remains the same all through the app
     public function simple_response($status,$display_message,$dev_message,$details,$statusCode){
 
         return response([
